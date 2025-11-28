@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply min-h-screen bg-rose-50/40 dark:bg-slate-950 text-gray-900 dark:text-slate-100 antialiased transition-colors duration-300;
+    font-family: 'Inter', 'Noto Sans SC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-2xl font-semibold text-white bg-accent shadow-soft dark:shadow-[0_15px_30px_rgba(15,23,42,0.35)] hover:bg-accent-dark transition-all duration-200 ease-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-2xl font-semibold border border-rose-200 dark:border-slate-700 text-accent hover:border-accent hover:bg-rose-50 dark:hover:bg-slate-800 transition-all duration-200 ease-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent;
+  }
+  .fade-container {
+    @apply min-h-[calc(100vh-96px)] flex;
+  }
+  .card {
+    @apply bg-white dark:bg-slate-900 rounded-3xl border border-rose-100 dark:border-slate-800 shadow-soft dark:shadow-[0_20px_45px_rgba(2,6,23,0.6)];
+  }
+}
