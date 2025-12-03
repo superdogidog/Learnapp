@@ -1,225 +1,72 @@
 import cedict from 'cc-cedict';
 
+// Cache for translations to avoid repeated API calls
+const translationCache = new Map();
+
 /**
- * Basic Chinese-Russian dictionary for common characters
- * This provides immediate Russian translations for the most common words
+ * Translate English text to Russian using MyMemory Translation API
+ * @param {string} text - English text to translate
+ * @returns {Promise<string>} Russian translation
  */
-const chineseRussianDict = {
-  '你': ['ты', 'вы'],
-  '好': ['хороший', 'хорошо', 'любить'],
-  '妈': ['мама'],
-  '吗': ['вопросительная частица'],
-  '我': ['я', 'мне'],
-  '你们': ['вы (мн.ч.)'],
-  '他': ['он'],
-  '她': ['она'],
-  '家': ['дом', 'семья'],
-  '水': ['вода'],
-  '米饭': ['рис', 'вареный рис'],
-  '苹果': ['яблоко'],
-  '茶': ['чай'],
-  '面包': ['хлеб'],
-  '鸡蛋': ['яйцо', 'куриное яйцо'],
-  '牛奶': ['молоко'],
-  '鱼': ['рыба'],
-  '肉': ['мясо'],
-  '爸爸': ['папа', 'отец'],
-  '妈妈': ['мама', 'мать'],
-  '哥哥': ['старший брат'],
-  '姐姐': ['старшая сестра'],
-  '弟弟': ['младший брат'],
-  '妹妹': ['младшая сестра'],
-  '儿子': ['сын'],
-  '女儿': ['дочь'],
-  '朋友': ['друг', 'подруга'],
-  '冷': ['холодный', 'холодно'],
-  '热': ['горячий', 'жарко'],
-  '下雨': ['идти (о дожде)', 'дождь идет'],
-  '下雪': ['идти (о снеге)', 'снег идет'],
-  '太阳': ['солнце'],
-  '风': ['ветер'],
-  '天气': ['погода'],
-  '云': ['облако', 'туча'],
-  '阴': ['пасмурный', 'облачный'],
-  '书': ['книга'],
-  '笔': ['ручка', 'карандаш'],
-  '学校': ['школа'],
-  '老师': ['учитель', 'преподаватель'],
-  '学生': ['ученик', 'студент'],
-  '桌子': ['стол'],
-  '椅子': ['стул'],
-  '作业': ['домашнее задание'],
-  '课': ['урок', 'занятие'],
-  '一': ['один'],
-  '二': ['два'],
-  '三': ['три'],
-  '四': ['четыре'],
-  '五': ['пять'],
-  '六': ['шесть'],
-  '七': ['семь'],
-  '八': ['восемь'],
-  '九': ['девять'],
-  '十': ['десять'],
-  '百': ['сто'],
-  '千': ['тысяча'],
-  '红': ['красный'],
-  '蓝': ['синий', 'голубой'],
-  '黄': ['желтый'],
-  '白': ['белый'],
-  '黑': ['черный'],
-  '绿': ['зеленый'],
-  '橙': ['оранжевый'],
-  '粉': ['розовый'],
-  '紫': ['фиолетовый'],
-  '车': ['машина', 'транспорт'],
-  '火车': ['поезд'],
-  '飞机': ['самолет'],
-  '船': ['корабль', 'лодка'],
-  '公共汽车': ['автобус'],
-  '出租车': ['такси'],
-  '地铁': ['метро'],
-  '走': ['идти', 'ходить'],
-  '骑': ['ехать верхом', 'ездить на велосипеде'],
-  '猫': ['кошка', 'кот'],
-  '狗': ['собака'],
-  '鸟': ['птица'],
-  '马': ['лошадь'],
-  '牛': ['корова', 'бык'],
-  '羊': ['овца', 'баран'],
-  '虎': ['тигр'],
-  '熊猫': ['панда'],
-  '衣服': ['одежда'],
-  '裤子': ['брюки', 'штаны'],
-  '鞋': ['обувь', 'туфли'],
-  '帽子': ['шапка', 'шляпа'],
-  '裙子': ['юбка'],
-  '外套': ['пальто', 'куртка'],
-  '衬衫': ['рубашка'],
-  '城市': ['город'],
-  '街': ['улица'],
-  '医院': ['больница'],
-  '商店': ['магазин'],
-  '银行': ['банк'],
-  '超市': ['супермаркет'],
-  '公园': ['парк'],
-  '饭店': ['ресторан'],
-  '医生': ['врач', 'доктор'],
-  '司机': ['водитель', 'шофер'],
-  '警察': ['полицейский', 'милиционер'],
-  '工人': ['рабочий'],
-  '服务员': ['официант', 'официантка'],
-  '老板': ['начальник', 'босс'],
-  '农民': ['крестьянин', 'фермер'],
-  '看书': ['читать книгу'],
-  '唱歌': ['петь песню'],
-  '跳舞': ['танцевать'],
-  '运动': ['спорт', 'заниматься спортом'],
-  '打球': ['играть в мяч'],
-  '画画': ['рисовать'],
-  '旅行': ['путешествовать', 'путешествие'],
-  '游戏': ['игра', 'играть'],
-  '听音乐': ['слушать музыку'],
-  '今天': ['сегодня'],
-  '昨天': ['вчера'],
-  '明天': ['завтра'],
-  '小时': ['час'],
-  '分钟': ['минута'],
-  '现在': ['сейчас', 'теперь'],
-  '早上': ['утро'],
-  '晚上': ['вечер'],
-  '时候': ['время', 'момент'],
-  '头': ['голова'],
-  '手': ['рука (кисть)'],
-  '脚': ['нога (стопа)'],
-  '眼睛': ['глаз', 'глаза'],
-  '鼻子': ['нос'],
-  '嘴': ['рот'],
-  '耳朵': ['ухо'],
-  '腿': ['нога'],
-  '身体': ['тело', 'организм'],
-  '高兴': ['радостный', 'веселый'],
-  '生气': ['сердиться', 'злиться'],
-  '害怕': ['бояться', 'пугаться'],
-  '难过': ['грустный', 'печальный'],
-  '累': ['уставший', 'усталый'],
-  '开心': ['радостный', 'счастливый'],
-  '爱': ['любить', 'любовь'],
-  '喜欢': ['нравиться', 'любить'],
-  '想': ['хотеть', 'думать'],
-  '忙': ['занятой', 'занят'],
-  '不': ['не', 'нет'],
-  '很': ['очень'],
-  '呢': ['частица вопросительная'],
-  '也': ['тоже', 'также'],
-  '都': ['все', 'оба'],
-  '这': ['это', 'этот'],
-  '是': ['быть', 'являться'],
-  '大夫': ['врач', 'доктор'],
-  '的': ['частица (показатель определения)'],
-  '那': ['тот', 'то'],
-  '哪': ['какой', 'который'],
-  '国': ['страна', 'государство'],
-  '人': ['человек', 'люди'],
-  '誰': ['кто'],
-  '我们': ['мы'],
-  '汉语': ['китайский язык'],
-  '中国': ['Китай'],
-  '什么': ['что', 'какой'],
-  '地图': ['карта', 'план'],
-  '看': ['смотреть', 'видеть'],
-  '请': ['пожалуйста', 'просить'],
-  '喝': ['пить'],
-  '您': ['вы (уважительная форма)'],
-  '进': ['входить', 'войти'],
-  '欢迎': ['приветствовать', 'добро пожаловать'],
-  '谢谢': ['спасибо'],
-  '客气': ['вежливый', 'церемонный'],
-  '吸烟': ['курить'],
-  '王': ['фамилия Ван'],
-  '贵姓': ['как ваша фамилия (вежливо)'],
-  '请问': ['разрешите спросить'],
-  '问': ['спрашивать', 'задавать вопрос'],
-  '留学生': ['студент-иностранец'],
-  '叫': ['звать', 'называться'],
-  '外语': ['иностранный язык'],
-  '学院': ['институт', 'колледж'],
-  '学习': ['учиться', 'изучать'],
-  '麻': ['конопля', 'онемелый'],
-  '马': ['лошадь'],
-  '骂': ['ругать', 'ругаться'],
-  '花': ['цветок', 'тратить'],
-  '话': ['слово', 'речь'],
-  '飞': ['летать'],
-  '费': ['расход', 'плата'],
-  '贺': ['поздравлять'],
-  '杯': ['чашка', 'стакан'],
-  '被': ['пассивный залог'],
-  '房': ['дом', 'комната'],
-  '仿': ['подражать'],
-  '忍': ['терпеть', 'сносить'],
-  '田': ['поле', 'рисовое поле'],
-  '舔': ['лизать'],
-  '八': ['восемь'],
-  '拔': ['вырывать', 'выдергивать'],
-  '把': ['брать', 'держать'],
-  '天': ['небо', 'день'],
-  '甜': ['сладкий'],
-  '添': ['добавлять'],
-  '音': ['звук'],
-  '银': ['серебро'],
-  '引': ['вести', 'тянуть'],
-  '印': ['печать', 'печатать'],
-  '中': ['середина', 'центр'],
-  '大': ['большой'],
-  '小': ['маленький'],
-};
+async function translateToRussian(text) {
+  if (!text) return text;
+  
+  // Check cache first
+  const cacheKey = text.toLowerCase();
+  if (translationCache.has(cacheKey)) {
+    return translationCache.get(cacheKey);
+  }
+  
+  try {
+    const encodedText = encodeURIComponent(text);
+    const url = `https://api.mymemory.translated.net/get?q=${encodedText}&langpair=en|ru`;
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn('Translation API request failed:', response.status);
+      return text; // Return original text if translation fails
+    }
+    
+    const data = await response.json();
+    const translatedText = data.responseData?.translatedText || text;
+    
+    // Cache the result
+    translationCache.set(cacheKey, translatedText);
+    
+    return translatedText;
+  } catch (error) {
+    console.error('Translation error:', error);
+    return text; // Return original text on error
+  }
+}
+
+/**
+ * Translate an array of English definitions to Russian
+ * @param {string[]} definitions - Array of English definitions
+ * @returns {Promise<string[]>} Array of Russian translations
+ */
+async function translateDefinitions(definitions) {
+  if (!definitions || definitions.length === 0) return [];
+  
+  try {
+    // Translate each definition
+    const translations = await Promise.all(
+      definitions.slice(0, 5).map(def => translateToRussian(def))
+    );
+    
+    return translations;
+  } catch (error) {
+    console.error('Error translating definitions:', error);
+    return definitions; // Return original definitions on error
+  }
+}
 
 /**
  * Get translation for a Chinese character or word
  * @param {string} text - Chinese character(s) to translate
- * @returns {Object|null} Translation data or null if not found
+ * @returns {Promise<Object|null>} Translation data or null if not found
  */
-export function getTranslation(text) {
+export async function getTranslation(text) {
   if (!text || text.trim() === '') return null;
   
   try {
@@ -229,19 +76,19 @@ export function getTranslation(text) {
     
     // Get the first (most common) entry
     const primary = results[0];
+    const englishDefs = primary.english || [];
     
-    // Get Russian translations from our dictionary or fall back to English
-    const russianDefs = chineseRussianDict[text];
-    const definitions = russianDefs || primary.english || [];
+    // Translate English definitions to Russian
+    const russianDefs = await translateDefinitions(englishDefs);
     
     return {
       simplified: primary.simplified,
       traditional: primary.traditional,
       pinyin: primary.pinyin,
-      definitions: definitions,
+      definitions: russianDefs,
+      englishDefinitions: englishDefs,
       hasMultipleEntries: results.length > 1,
       allEntries: results,
-      isRussian: !!russianDefs,
     };
   } catch (error) {
     console.error('Translation error:', error);
@@ -252,9 +99,9 @@ export function getTranslation(text) {
 /**
  * Get extended translation info with all available definitions
  * @param {string} text - Chinese character(s) to translate
- * @returns {Object|null} Extended translation data
+ * @returns {Promise<Object|null>} Extended translation data
  */
-export function getExtendedTranslation(text) {
+export async function getExtendedTranslation(text) {
   if (!text || text.trim() === '') return null;
   
   try {
@@ -262,17 +109,28 @@ export function getExtendedTranslation(text) {
     
     if (!results || results.length === 0) return null;
     
+    // Translate entries to Russian
+    const translatedEntries = await Promise.all(
+      results.map(async (entry) => {
+        const englishDefs = entry.english || [];
+        const russianDefs = await translateDefinitions(englishDefs);
+        
+        return {
+          simplified: entry.simplified,
+          traditional: entry.traditional,
+          pinyin: entry.pinyin,
+          definitions: russianDefs,
+          englishDefinitions: englishDefs,
+        };
+      })
+    );
+    
     return {
       simplified: results[0].simplified,
       traditional: results[0].traditional,
       pinyin: results[0].pinyin,
-      allDefinitions: results.flatMap(entry => entry.english || []),
-      entries: results.map(entry => ({
-        simplified: entry.simplified,
-        traditional: entry.traditional,
-        pinyin: entry.pinyin,
-        definitions: entry.english || [],
-      })),
+      allDefinitions: translatedEntries.flatMap(entry => entry.definitions),
+      entries: translatedEntries,
       totalEntries: results.length,
     };
   } catch (error) {

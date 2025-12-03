@@ -75,16 +75,36 @@ export default function ListeningPage() {
   const phoneticAudioRef = useRef(null);
 
   const [showTranslation, setShowTranslation] = useState(false);
+  const [translation, setTranslation] = useState(null);
+  const [isLoadingTranslation, setIsLoadingTranslation] = useState(false);
 
   const current = useMemo(() => queue[currentIndex], [queue, currentIndex]);
   const currentSyllable = current?.syllables?.[hintIndex];
   const currentPhonetic = phoneticQueue[0];
   
-  const translation = useMemo(() => {
-    if (!current?.text || !settings.enableTranslation) return null;
-    return settings.extendedTranslation 
-      ? getExtendedTranslation(current.text)
-      : getTranslation(current.text);
+  // Load translation asynchronously when current character changes
+  useEffect(() => {
+    async function loadTranslation() {
+      if (!current?.text || !settings.enableTranslation) {
+        setTranslation(null);
+        return;
+      }
+      
+      setIsLoadingTranslation(true);
+      try {
+        const result = settings.extendedTranslation 
+          ? await getExtendedTranslation(current.text)
+          : await getTranslation(current.text);
+        setTranslation(result);
+      } catch (error) {
+        console.error('Failed to load translation:', error);
+        setTranslation(null);
+      } finally {
+        setIsLoadingTranslation(false);
+      }
+    }
+    
+    loadTranslation();
   }, [current?.text, settings.enableTranslation, settings.extendedTranslation]);
 
   const applyPreset = (chars) => {
@@ -362,16 +382,20 @@ export default function ListeningPage() {
               <button className="btn-outline w-full sm:w-auto" onClick={replayWord}>▶️ Проиграть ещё раз</button>
               
               {/* Translation Display */}
-              {settings.enableTranslation && translation && (
+              {settings.enableTranslation && (
                 <div className="mt-4">
-                  {settings.translateOnButton && !showTranslation ? (
+                  {isLoadingTranslation ? (
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      ⏳ Загрузка перевода...
+                    </div>
+                  ) : settings.translateOnButton && !showTranslation ? (
                     <button 
                       className="btn-outline w-full sm:w-auto"
                       onClick={() => setShowTranslation(true)}
                     >
                       📖 Показать перевод
                     </button>
-                  ) : (
+                  ) : translation ? (
                     <div className="bg-rose-50 dark:bg-slate-800 rounded-2xl p-4 text-left">
                       <div className="font-semibold text-lg mb-2">
                         {translation.simplified}
@@ -416,7 +440,7 @@ export default function ListeningPage() {
                         </button>
                       )}
                     </div>
-                  )}
+                  ) : null}
                 </div>
               )}
             </div>
