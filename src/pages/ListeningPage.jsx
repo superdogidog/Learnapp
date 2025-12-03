@@ -21,21 +21,23 @@ const playSequence = async (syllables, fallbackSpeak) => {
   for (const unit of syllables) {
     if (!unit) continue;
     // eslint-disable-next-line no-await-in-loop
-    await new Promise(async (resolve) => {
+    await (async () => {
       // Load audio lazily if not already loaded
       const audioUrl = await loadSyllableAudio(unit);
       
-      if (audioUrl) {
-        const audio = new Audio(audioUrl);
-        audio.play();
-        audio.onended = resolve;
-        audio.onerror = resolve;
-      } else if (fallbackSpeak) {
-        fallbackSpeak(unit).finally(resolve);
-      } else {
-        resolve();
-      }
-    });
+      return new Promise((resolve) => {
+        if (audioUrl) {
+          const audio = new Audio(audioUrl);
+          audio.play();
+          audio.onended = resolve;
+          audio.onerror = resolve;
+        } else if (fallbackSpeak) {
+          fallbackSpeak(unit).finally(resolve);
+        } else {
+          resolve();
+        }
+      });
+    })();
   }
 };
 
@@ -259,13 +261,12 @@ export default function ListeningPage() {
   useEffect(() => {
     if (!phoneticStarted || !currentPhonetic) return;
     
-    let audio;
     const playAudio = async () => {
       try {
         // Load audio lazily
         const audioUrl = await loadSyllableAudio(currentPhonetic);
         if (audioUrl) {
-          audio = new Audio(audioUrl);
+          const audio = new Audio(audioUrl);
           phoneticAudioRef.current = audio;
           await audio.play();
         } else {
@@ -280,7 +281,9 @@ export default function ListeningPage() {
     playAudio();
     
     return () => {
-      if (audio) audio.pause();
+      if (phoneticAudioRef.current) {
+        phoneticAudioRef.current.pause();
+      }
     };
   }, [phoneticStarted, currentPhonetic, speakSyllable]);
 
