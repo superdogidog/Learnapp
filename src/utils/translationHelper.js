@@ -63,10 +63,12 @@ async function translateDefinitions(definitions) {
 
 /**
  * Get translation for a Chinese character or word
+ * Returns English translations immediately and Russian translations via callback
  * @param {string} text - Chinese character(s) to translate
- * @returns {Promise<Object|null>} Translation data or null if not found
+ * @param {Function} onRussianReady - Optional callback when Russian translations are ready
+ * @returns {Object|null} Translation data with English definitions or null if not found
  */
-export async function getTranslation(text) {
+export function getTranslation(text, onRussianReady = null) {
   if (!text || text.trim() === '') return null;
   
   try {
@@ -78,18 +80,31 @@ export async function getTranslation(text) {
     const primary = results[0];
     const englishDefs = primary.english || [];
     
-    // Translate English definitions to Russian
-    const russianDefs = await translateDefinitions(englishDefs);
-    
-    return {
+    // Return English translations immediately
+    const translationData = {
       simplified: primary.simplified,
       traditional: primary.traditional,
       pinyin: primary.pinyin,
-      definitions: russianDefs,
+      definitions: englishDefs,
       englishDefinitions: englishDefs,
+      russianDefinitions: null,
       hasMultipleEntries: results.length > 1,
       allEntries: results,
     };
+    
+    // Start translating to Russian in the background
+    if (onRussianReady) {
+      translateDefinitions(englishDefs).then(russianDefs => {
+        onRussianReady({
+          ...translationData,
+          russianDefinitions: russianDefs,
+        });
+      }).catch(err => {
+        console.error('Failed to get Russian translations:', err);
+      });
+    }
+    
+    return translationData;
   } catch (error) {
     console.error('Translation error:', error);
     return null;
@@ -98,10 +113,12 @@ export async function getTranslation(text) {
 
 /**
  * Get extended translation info with all available definitions
+ * Returns English translations immediately and Russian translations via callback
  * @param {string} text - Chinese character(s) to translate
- * @returns {Promise<Object|null>} Extended translation data
+ * @param {Function} onRussianReady - Optional callback when Russian translations are ready
+ * @returns {Object|null} Extended translation data with English definitions
  */
-export async function getExtendedTranslation(text) {
+export function getExtendedTranslation(text, onRussianReady = null) {
   if (!text || text.trim() === '') return null;
   
   try {
@@ -109,30 +126,56 @@ export async function getExtendedTranslation(text) {
     
     if (!results || results.length === 0) return null;
     
-    // Translate entries to Russian
-    const translatedEntries = await Promise.all(
-      results.map(async (entry) => {
-        const englishDefs = entry.english || [];
-        const russianDefs = await translateDefinitions(englishDefs);
-        
-        return {
-          simplified: entry.simplified,
-          traditional: entry.traditional,
-          pinyin: entry.pinyin,
-          definitions: russianDefs,
-          englishDefinitions: englishDefs,
-        };
-      })
-    );
+    // Return English entries immediately
+    const englishEntries = results.map(entry => ({
+      simplified: entry.simplified,
+      traditional: entry.traditional,
+      pinyin: entry.pinyin,
+      definitions: entry.english || [],
+      englishDefinitions: entry.english || [],
+      russianDefinitions: null,
+    }));
     
-    return {
+    const translationData = {
       simplified: results[0].simplified,
       traditional: results[0].traditional,
       pinyin: results[0].pinyin,
-      allDefinitions: translatedEntries.flatMap(entry => entry.definitions),
-      entries: translatedEntries,
+      allDefinitions: englishEntries.flatMap(entry => entry.definitions),
+      entries: englishEntries,
       totalEntries: results.length,
     };
+    
+    // Start translating to Russian in the background
+    if (onRussianReady) {
+      Promise.all(
+        results.map(async (entry) => {
+          const englishDefs = entry.english || [];
+          const russianDefs = await translateDefinitions(englishDefs);
+          
+          return {
+            simplified: entry.simplified,
+            traditional: entry.traditional,
+            pinyin: entry.pinyin,
+            definitions: russianDefs,
+            englishDefinitions: englishDefs,
+            russianDefinitions: russianDefs,
+          };
+        })
+      ).then(translatedEntries => {
+        onRussianReady({
+          simplified: results[0].simplified,
+          traditional: results[0].traditional,
+          pinyin: results[0].pinyin,
+          allDefinitions: translatedEntries.flatMap(entry => entry.definitions),
+          entries: translatedEntries,
+          totalEntries: results.length,
+        });
+      }).catch(err => {
+        console.error('Failed to get Russian translations:', err);
+      });
+    }
+    
+    return translationData;
   } catch (error) {
     console.error('Extended translation error:', error);
     return null;

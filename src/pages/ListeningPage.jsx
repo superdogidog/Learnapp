@@ -76,35 +76,40 @@ export default function ListeningPage() {
 
   const [showTranslation, setShowTranslation] = useState(false);
   const [translation, setTranslation] = useState(null);
-  const [isLoadingTranslation, setIsLoadingTranslation] = useState(false);
+  const [russianTranslation, setRussianTranslation] = useState(null);
+  const [showEnglish, setShowEnglish] = useState(false);
+  const [isLoadingRussian, setIsLoadingRussian] = useState(false);
 
   const current = useMemo(() => queue[currentIndex], [queue, currentIndex]);
   const currentSyllable = current?.syllables?.[hintIndex];
   const currentPhonetic = phoneticQueue[0];
   
-  // Load translation asynchronously when current character changes
+  // Load translation when current character changes
   useEffect(() => {
-    async function loadTranslation() {
-      if (!current?.text || !settings.enableTranslation) {
-        setTranslation(null);
-        return;
-      }
-      
-      setIsLoadingTranslation(true);
-      try {
-        const result = settings.extendedTranslation 
-          ? await getExtendedTranslation(current.text)
-          : await getTranslation(current.text);
-        setTranslation(result);
-      } catch (error) {
-        console.error('Failed to load translation:', error);
-        setTranslation(null);
-      } finally {
-        setIsLoadingTranslation(false);
-      }
+    if (!current?.text || !settings.enableTranslation) {
+      setTranslation(null);
+      setRussianTranslation(null);
+      setShowEnglish(false);
+      setIsLoadingRussian(false);
+      return;
     }
     
-    loadTranslation();
+    // Reset language preference when character changes
+    setShowEnglish(false);
+    setIsLoadingRussian(true);
+    
+    // Get English translation immediately
+    const handleRussianReady = (russianResult) => {
+      setRussianTranslation(russianResult);
+      setIsLoadingRussian(false);
+    };
+    
+    const result = settings.extendedTranslation 
+      ? getExtendedTranslation(current.text, handleRussianReady)
+      : getTranslation(current.text, handleRussianReady);
+    
+    setTranslation(result);
+    setRussianTranslation(null);
   }, [current?.text, settings.enableTranslation, settings.extendedTranslation]);
 
   const applyPreset = (chars) => {
@@ -384,19 +389,26 @@ export default function ListeningPage() {
               {/* Translation Display */}
               {settings.enableTranslation && (
                 <div className="mt-4">
-                  {isLoadingTranslation ? (
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      ⏳ Загрузка перевода...
-                    </div>
-                  ) : settings.translateOnButton && !showTranslation ? (
+                  {!translation ? null : settings.translateOnButton && !showTranslation ? (
                     <button 
                       className="btn-outline w-full sm:w-auto"
                       onClick={() => setShowTranslation(true)}
                     >
                       📖 Показать перевод
                     </button>
-                  ) : translation ? (
-                    <div className="bg-rose-50 dark:bg-slate-800 rounded-2xl p-4 text-left">
+                  ) : (
+                    <div className="bg-rose-50 dark:bg-slate-800 rounded-2xl p-4 text-left relative">
+                      {/* Language toggle button */}
+                      {russianTranslation && (
+                        <button
+                          className="absolute top-2 right-2 p-2 text-lg hover:bg-rose-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                          onClick={() => setShowEnglish(!showEnglish)}
+                          title={showEnglish ? "Показать русский перевод" : "Показать английский перевод"}
+                        >
+                          🔁
+                        </button>
+                      )}
+                      
                       <div className="font-semibold text-lg mb-2">
                         {translation.simplified}
                         {translation.traditional !== translation.simplified && (
@@ -408,12 +420,20 @@ export default function ListeningPage() {
                           {translation.pinyin}
                         </div>
                       )}
+                      
+                      {/* Show loading indicator for Russian if not ready and not showing English */}
+                      {isLoadingRussian && !showEnglish && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                          ⏳ Загрузка русского перевода...
+                        </div>
+                      )}
+                      
                       {settings.extendedTranslation ? (
                         <div className="space-y-2">
                           <div className="font-medium text-gray-700 dark:text-gray-300">
                             Переводы:
                           </div>
-                          {translation.entries?.map((entry, idx) => (
+                          {(showEnglish || !russianTranslation ? translation : russianTranslation).entries?.map((entry, idx) => (
                             <div key={idx} className="pl-3 border-l-2 border-rose-200 dark:border-slate-700">
                               <div className="text-sm text-gray-600 dark:text-gray-400">{entry.pinyin}</div>
                               <ul className="list-disc list-inside text-sm">
@@ -426,7 +446,7 @@ export default function ListeningPage() {
                         </div>
                       ) : (
                         <div className="text-sm">
-                          {translation.definitions?.slice(0, 3).map((def, idx) => (
+                          {(showEnglish || !russianTranslation ? translation : russianTranslation).definitions?.slice(0, 3).map((def, idx) => (
                             <div key={idx}>• {def}</div>
                           ))}
                         </div>
@@ -440,7 +460,7 @@ export default function ListeningPage() {
                         </button>
                       )}
                     </div>
-                  ) : null}
+                  )}
                 </div>
               )}
             </div>
