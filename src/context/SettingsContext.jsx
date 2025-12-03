@@ -7,6 +7,9 @@ const defaultSettings = {
   theme: 'light',
   autoAdvance: true,
   advanceDelay: 1300,
+  enableTranslation: false,
+  extendedTranslation: false,
+  translateOnButton: false,
 };
 
 export function SettingsProvider({ children }) {
@@ -17,6 +20,14 @@ export function SettingsProvider({ children }) {
     setTheme: (theme) => setSettings((prev) => ({ ...prev, theme })),
     setAutoAdvance: (autoAdvance) => setSettings((prev) => ({ ...prev, autoAdvance })),
     setAdvanceDelay: (advanceDelay) => setSettings((prev) => ({ ...prev, advanceDelay })),
+    setEnableTranslation: (enableTranslation) => setSettings((prev) => ({ 
+      ...prev, 
+      enableTranslation,
+      extendedTranslation: enableTranslation ? prev.extendedTranslation : false,
+      translateOnButton: enableTranslation ? prev.translateOnButton : false,
+    })),
+    setExtendedTranslation: (extendedTranslation) => setSettings((prev) => ({ ...prev, extendedTranslation })),
+    setTranslateOnButton: (translateOnButton) => setSettings((prev) => ({ ...prev, translateOnButton })),
     resetSettings: () => setSettings(defaultSettings),
   }), [settings, setSettings]);
 
