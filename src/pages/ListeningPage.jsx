@@ -283,21 +283,21 @@ export default function ListeningPage() {
 
   return (
     <main className="page-container flex flex-col gap-10">
-      <section className="card p-6 md:p-10 shadow-soft">
+      <section className="card p-4 sm:p-6 md:p-10 shadow-soft">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <h1 className="text-4xl font-black">Тренировка слуха</h1>
-            <p className="text-gray-600 dark:text-gray-300">Выберите готовый список или соберите свой, система сама найдёт пиньинь и озвучку.</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black">Тренировка слуха</h1>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Выберите готовый список или соберите свой, система сама найдёт пиньинь и озвучку.</p>
           </div>
           <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
             <div>
-              <label className="text-sm text-gray-500">Иероглифы (через запятую)</label>
+              <label className="text-sm text-gray-500 dark:text-gray-400">Иероглифы (через запятую)</label>
               <textarea
                 rows={3}
                 value={inputChars}
                 onChange={(e) => setInputChars(e.target.value)}
                 placeholder="например 你,好,妈,吗"
-                className="w-full rounded-2xl border border-rose-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-950"
+                className="w-full rounded-2xl border border-rose-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-950 text-base"
               />
             </div>
             <div className="bg-rose-50 dark:bg-slate-800 rounded-2xl p-4">
@@ -331,8 +331,8 @@ export default function ListeningPage() {
       </section>
 
       {started && current && (
-        <section className="card p-6 md:p-10">
-          <div className="flex flex-col gap-6">
+        <section className="card p-4 sm:p-6 md:p-10">
+          <div className="flex flex-col gap-4 md:gap-6">
             <div>
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>Прогресс</span>
@@ -343,50 +343,50 @@ export default function ListeningPage() {
               </div>
             </div>
             <div className="text-center space-y-4">
-              <div className="text-sm uppercase tracking-wide text-gray-500">Слушай и вводи пиньинь</div>
-              <div className="text-[90px] font-semibold">{current.text}</div>
-              <div className="text-lg text-gray-500">
+              <div className="text-xs md:text-sm uppercase tracking-wide text-gray-500 dark:text-gray-400">Слушай и вводи пиньинь</div>
+              <div className="text-[60px] sm:text-[80px] md:text-[90px] font-semibold">{current.text}</div>
+              <div className="text-base md:text-lg text-gray-500 dark:text-gray-400">
                 Слог {Math.min(hintIndex + 1, current.syllables?.length ?? 0)} из {current.syllables?.length ?? 0}
               </div>
-              <button className="btn-outline" onClick={replayWord}>▶️ Проиграть ещё раз</button>
+              <button className="btn-outline w-full sm:w-auto" onClick={replayWord}>▶️ Проиграть ещё раз</button>
             </div>
             <div>
-              <label className="text-sm text-gray-500">Введите пиньинь с тоном (например ni3)</label>
+              <label className="text-sm text-gray-500 dark:text-gray-400">Введите пиньинь с тоном (например ni3)</label>
               <input
                 type="text"
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
                 placeholder="например ni3"
-                className="mt-2 w-full rounded-2xl border border-rose-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-950"
+                className="mt-2 w-full rounded-2xl border border-rose-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-950 text-base md:text-lg"
               />
             </div>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
               {toneButtons.map((btn) => (
                  <button
                    key={btn.tone}
                    type="button"
-                   className={`rounded-2xl border px-4 py-3 text-2xl font-semibold transition-all ${characterToneAnswer === btn.tone ? 'bg-accent text-white border-accent shadow-soft scale-105' : 'border-rose-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 hover:border-accent/60'}`}
+                   className={`rounded-2xl border px-3 py-3 sm:px-4 sm:py-4 text-xl sm:text-2xl font-semibold transition-all touch-manipulation ${characterToneAnswer === btn.tone ? 'bg-accent text-white border-accent shadow-soft scale-105' : 'border-rose-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 hover:border-accent/60 active:scale-95'}`}
                    onClick={() => handleToneSelect(btn.tone)}
                  >
                    {btn.label}
                  </button>
               ))}
             </div>
-            <div className="flex flex-wrap gap-3 items-center">
-              <button className="btn-primary" onClick={() => checkAnswer()}>Проверить</button>
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center">
+              <button className="btn-primary flex-1 sm:flex-initial" onClick={() => checkAnswer()}>Проверить</button>
               {!settings.autoAdvance && result && (
-                <button className="btn-outline" onClick={gotoNext}>Дальше</button>
+                <button className="btn-outline flex-1 sm:flex-initial" onClick={gotoNext}>Дальше</button>
               )}
-              {result && <span className={`text-sm ${result.startsWith('✅') ? 'text-green-500' : 'text-red-500'}`}>{result}</span>}
+              {result && <span className={`text-sm md:text-base text-center sm:text-left ${result.startsWith('✅') ? 'text-green-500' : 'text-red-500'}`}>{result}</span>}
             </div>
           </div>
         </section>
       )}
 
       {completed && (
-        <section className="card p-6 text-center space-y-4">
-          <h2 className="text-3xl">🎉 Все слова пройдены!</h2>
+        <section className="card p-4 sm:p-6 text-center space-y-4">
+          <h2 className="text-2xl sm:text-3xl">🎉 Все слова пройдены!</h2>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button className="btn-outline" onClick={resetTraining}>Начать заново</button>
             <button className="btn-primary" onClick={() => { setCompleted(false); setStarted(true); setCurrentIndex(0); setListeningState({ queue, index: 0, completed: false }); }}>Повторить список</button>
@@ -394,8 +394,8 @@ export default function ListeningPage() {
         </section>
       )}
 
-      <section className="card p-6 md:p-10">
-        <h2 className="text-2xl font-semibold">Статистика</h2>
+      <section className="card p-4 sm:p-6 md:p-10">
+        <h2 className="text-xl sm:text-2xl font-semibold">Статистика</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl bg-rose-50 dark:bg-slate-800 p-4">
             <div className="text-sm text-gray-500">Верных</div>
@@ -419,12 +419,12 @@ export default function ListeningPage() {
         </div>
       </section>
 
-      <section className="card p-6 md:p-10">
+      <section className="card p-4 sm:p-6 md:p-10">
         <div className="flex flex-col gap-4">
           <div className="text-center space-y-2">
-            <span className="text-4xl">🎯</span>
-            <h2 className="text-3xl font-bold">Режим фонетики</h2>
-            <p className="text-gray-600 dark:text-gray-300">Слушайте пиньинь из базы и выбирайте правильный тон палочками.</p>
+            <span className="text-3xl sm:text-4xl">🎯</span>
+            <h2 className="text-2xl sm:text-3xl font-bold">Режим фонетики</h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Слушайте пиньинь из базы и выбирайте правильный тон палочками.</p>
           </div>
           {!phoneticStarted && (
             <button className="btn-primary w-full sm:w-auto mx-auto" onClick={startPhonetic}>Начать фонетическую тренировку</button>
@@ -438,29 +438,29 @@ export default function ListeningPage() {
                 <button className="btn-outline" onClick={replayPhonetic}>▶️ Проиграть звук</button>
               </div>
               <div>
-                <label className="text-sm text-gray-500">Введите пиньинь</label>
+                <label className="text-sm text-gray-500 dark:text-gray-400">Введите пиньинь</label>
                 <input
                   value={phoneticAnswer}
                   onChange={(e) => setPhoneticAnswer(e.target.value)}
                   placeholder="например ai"
-                  className="mt-2 w-full rounded-2xl border border-rose-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-950"
+                  className="mt-2 w-full rounded-2xl border border-rose-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-950 text-base md:text-lg"
                 />
               </div>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-4 gap-2 sm:gap-3">
                 {toneButtons.map((btn) => (
                   <button
                     key={btn.tone}
                     type="button"
-                    className={`rounded-2xl border px-4 py-3 text-2xl font-semibold transition-all ${phoneticTone === btn.tone ? 'bg-accent text-white border-accent shadow-soft scale-105' : 'border-rose-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 hover:border-accent/60'}`}
+                    className={`rounded-2xl border px-3 py-3 sm:px-4 sm:py-4 text-xl sm:text-2xl font-semibold transition-all touch-manipulation ${phoneticTone === btn.tone ? 'bg-accent text-white border-accent shadow-soft scale-105' : 'border-rose-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 hover:border-accent/60 active:scale-95'}`}
                     onClick={() => handlePhoneticTone(btn.tone)}
                   >
                     {btn.label}
                   </button>
                 ))}
               </div>
-              <div className="flex flex-wrap gap-3 items-center">
-                <button className="btn-primary" onClick={() => checkPhonetic()}>Проверить</button>
-                {phoneticResult && <span className={`text-sm ${phoneticResult.startsWith('✅') ? 'text-green-500' : 'text-red-500'}`}>{phoneticResult}</span>}
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-stretch sm:items-center">
+                <button className="btn-primary flex-1 sm:flex-initial" onClick={() => checkPhonetic()}>Проверить</button>
+                {phoneticResult && <span className={`text-sm md:text-base text-center sm:text-left ${phoneticResult.startsWith('✅') ? 'text-green-500' : 'text-red-500'}`}>{phoneticResult}</span>}
               </div>
             </div>
           )}
