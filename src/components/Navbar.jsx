@@ -15,7 +15,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-slate-900/80 bg-white/70 dark:bg-slate-900/70 border-b border-rose-100 dark:border-slate-800">
       <div className="page-container flex items-center justify-between py-4">
-        <Link to="/" className="flex items-center gap-3">
+        <Link to="/listening" className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-accent-coral shadow-soft flex items-center justify-center text-white text-xl">汉</div>
           <div className="leading-tight">
             <div className="text-lg font-extrabold tracking-tight text-gray-900">Learn Chinese</div>
@@ -24,7 +24,7 @@ export default function Navbar() {
         </Link>
         <div className="flex items-center gap-2">
           <nav className="flex items-center gap-2">
-            <NavLink to="/" className={navLinkClass} end>
+            <NavLink to="/home" className={navLinkClass}>
               Главная
             </NavLink>
             <NavLink to="/listening" className={navLinkClass}>

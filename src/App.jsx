@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Navbar from './components/Navbar.jsx';
 import HomePage from './pages/HomePage.jsx';
@@ -37,8 +37,9 @@ function App() {
       <Navbar />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<Navigate to="/listening" replace />} />
           <Route
-            path="/"
+            path="/home"
             element={
               <motion.div
                 className="fade-container"
