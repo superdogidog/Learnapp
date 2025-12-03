@@ -97,6 +97,7 @@ export function getTranslation(text, onRussianReady = null) {
       translateDefinitions(englishDefs).then(russianDefs => {
         onRussianReady({
           ...translationData,
+          definitions: russianDefs,
           russianDefinitions: russianDefs,
         });
       }).catch(err => {

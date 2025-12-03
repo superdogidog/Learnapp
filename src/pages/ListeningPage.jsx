@@ -465,13 +465,13 @@ export default function ListeningPage() {
               )}
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">Введите пиньинь с тоном (например ni3)</label>
+              <label className="text-sm text-gray-500 dark:text-gray-400">Введите пиньинь (например ni или nǐ)</label>
               <input
                 type="text"
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
-                placeholder="например ni3"
+                placeholder="например ni или nǐ"
                 className="mt-2 w-full rounded-2xl border border-rose-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-950 text-base md:text-lg"
               />
             </div>
