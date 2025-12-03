@@ -20,24 +20,24 @@ const shuffle = (array) => array.slice().sort(() => Math.random() - 0.5);
 const playSequence = async (syllables, fallbackSpeak) => {
   for (const unit of syllables) {
     if (!unit) continue;
+    
+    // Load audio lazily if not already loaded
     // eslint-disable-next-line no-await-in-loop
-    await (async () => {
-      // Load audio lazily if not already loaded
-      const audioUrl = await loadSyllableAudio(unit);
-      
-      return new Promise((resolve) => {
-        if (audioUrl) {
-          const audio = new Audio(audioUrl);
-          audio.play();
-          audio.onended = resolve;
-          audio.onerror = resolve;
-        } else if (fallbackSpeak) {
-          fallbackSpeak(unit).finally(resolve);
-        } else {
-          resolve();
-        }
-      });
-    })();
+    const audioUrl = await loadSyllableAudio(unit);
+    
+    // eslint-disable-next-line no-await-in-loop
+    await new Promise((resolve) => {
+      if (audioUrl) {
+        const audio = new Audio(audioUrl);
+        audio.play();
+        audio.onended = resolve;
+        audio.onerror = resolve;
+      } else if (fallbackSpeak) {
+        fallbackSpeak(unit).finally(resolve);
+      } else {
+        resolve();
+      }
+    });
   }
 };
 
@@ -296,25 +296,28 @@ export default function ListeningPage() {
     setPhoneticTone(null);
   };
 
-  const replayPhonetic = async () => {
+  const replayPhonetic = () => {
     if (phoneticAudioRef.current) {
       phoneticAudioRef.current.currentTime = 0;
       phoneticAudioRef.current.play().catch(() => speakSyllable({ display: currentPhonetic?.syllable }));
     } else if (currentPhonetic) {
       // If audio ref is not available, load and play again
-      try {
-        const audioUrl = await loadSyllableAudio(currentPhonetic);
-        if (audioUrl) {
-          const audio = new Audio(audioUrl);
-          phoneticAudioRef.current = audio;
-          await audio.play();
-        } else {
+      const loadAndPlay = async () => {
+        try {
+          const audioUrl = await loadSyllableAudio(currentPhonetic);
+          if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            phoneticAudioRef.current = audio;
+            await audio.play();
+          } else {
+            await speakSyllable({ display: currentPhonetic.syllable });
+          }
+        } catch (err) {
+          console.error('Error replaying audio:', err);
           await speakSyllable({ display: currentPhonetic.syllable });
         }
-      } catch (err) {
-        console.error('Error replaying audio:', err);
-        await speakSyllable({ display: currentPhonetic.syllable });
-      }
+      };
+      loadAndPlay();
     }
   };
 
