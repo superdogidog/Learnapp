@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext.jsx';
-import SettingsDrawer from './SettingsDrawer.jsx';
 
 const navLinkClass = ({ isActive }) =>
   `px-4 py-2 rounded-lg transition-colors duration-200 ${
@@ -15,7 +14,6 @@ const mobileNavLinkClass = ({ isActive }) =>
 
 export default function Navbar() {
   const { settings, setTheme } = useSettings();
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const toggleTheme = () => setTheme(settings.theme === 'light' ? 'dark' : 'light');
   
@@ -44,6 +42,9 @@ export default function Navbar() {
             <NavLink to="/characters" className={navLinkClass}>
               Тренировка иероглифов
             </NavLink>
+            <NavLink to="/settings" className={navLinkClass}>
+              Настройки
+            </NavLink>
           </nav>
           <button
             type="button"
@@ -52,13 +53,6 @@ export default function Navbar() {
             aria-label="Переключить тему"
           >
             {settings.theme === 'light' ? '🌙' : '☀️'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setSettingsOpen(true)}
-            className="h-10 px-4 rounded-2xl border border-rose-100 dark:border-slate-700 bg-white/80 dark:bg-slate-800 text-sm font-semibold shadow-soft hover:bg-white dark:hover:bg-slate-700 transition"
-          >
-            ⚙️ Настройки
           </button>
         </div>
 
@@ -96,21 +90,12 @@ export default function Navbar() {
             <NavLink to="/characters" className={mobileNavLinkClass} onClick={closeMobileMenu}>
               🈶 Тренировка иероглифов
             </NavLink>
-            <button
-              type="button"
-              onClick={() => {
-                setSettingsOpen(true);
-                closeMobileMenu();
-              }}
-              className="w-full text-left px-4 py-3 rounded-lg text-base text-gray-700 dark:text-gray-200 hover:text-accent hover:bg-rose-50 dark:hover:bg-slate-800 transition-colors duration-200"
-            >
+            <NavLink to="/settings" className={mobileNavLinkClass} onClick={closeMobileMenu}>
               ⚙️ Настройки
-            </button>
+            </NavLink>
           </nav>
         </div>
       )}
-
-      <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </header>
   );
 }

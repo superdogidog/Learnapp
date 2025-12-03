@@ -5,6 +5,7 @@ import { getPinyinForChars, applyToneMark } from '../utils/pinyinHelpers';
 import { pinyinAudioDB } from '../data/pinyinAudioDB';
 import { useSettings } from '../context/SettingsContext.jsx';
 import { useProgress } from '../context/ProgressContext.jsx';
+import { getTranslation, getExtendedTranslation } from '../utils/translationHelper.js';
 
 const cardVariants = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } };
 const toneButtons = [
@@ -73,9 +74,18 @@ export default function ListeningPage() {
   const [phoneticTone, setPhoneticTone] = useState(null);
   const phoneticAudioRef = useRef(null);
 
+  const [showTranslation, setShowTranslation] = useState(false);
+
   const current = useMemo(() => queue[currentIndex], [queue, currentIndex]);
   const currentSyllable = current?.syllables?.[hintIndex];
   const currentPhonetic = phoneticQueue[0];
+  
+  const translation = useMemo(() => {
+    if (!current?.text || !settings.enableTranslation) return null;
+    return settings.extendedTranslation 
+      ? getExtendedTranslation(current.text)
+      : getTranslation(current.text);
+  }, [current?.text, settings.enableTranslation, settings.extendedTranslation]);
 
   const applyPreset = (chars) => {
     setInputChars(chars);
@@ -151,6 +161,7 @@ export default function ListeningPage() {
 
   const gotoNext = () => {
     setHintIndex(0);
+    setShowTranslation(false);
     const nextIndex = currentIndex + 1;
     if (nextIndex >= queue.length) {
       setCompleted(true);
@@ -349,6 +360,65 @@ export default function ListeningPage() {
                 Слог {Math.min(hintIndex + 1, current.syllables?.length ?? 0)} из {current.syllables?.length ?? 0}
               </div>
               <button className="btn-outline w-full sm:w-auto" onClick={replayWord}>▶️ Проиграть ещё раз</button>
+              
+              {/* Translation Display */}
+              {settings.enableTranslation && translation && (
+                <div className="mt-4">
+                  {settings.translateOnButton && !showTranslation ? (
+                    <button 
+                      className="btn-outline w-full sm:w-auto"
+                      onClick={() => setShowTranslation(true)}
+                    >
+                      📖 Показать перевод
+                    </button>
+                  ) : (
+                    <div className="bg-rose-50 dark:bg-slate-800 rounded-2xl p-4 text-left">
+                      <div className="font-semibold text-lg mb-2">
+                        {translation.simplified}
+                        {translation.traditional !== translation.simplified && (
+                          <span className="ml-2 text-gray-500">({translation.traditional})</span>
+                        )}
+                      </div>
+                      {translation.pinyin && (
+                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                          {translation.pinyin}
+                        </div>
+                      )}
+                      {settings.extendedTranslation ? (
+                        <div className="space-y-2">
+                          <div className="font-medium text-gray-700 dark:text-gray-300">
+                            Переводы:
+                          </div>
+                          {translation.entries?.map((entry, idx) => (
+                            <div key={idx} className="pl-3 border-l-2 border-rose-200 dark:border-slate-700">
+                              <div className="text-sm text-gray-600 dark:text-gray-400">{entry.pinyin}</div>
+                              <ul className="list-disc list-inside text-sm">
+                                {entry.definitions?.map((def, defIdx) => (
+                                  <li key={defIdx}>{def}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-sm">
+                          {translation.definitions?.slice(0, 3).map((def, idx) => (
+                            <div key={idx}>• {def}</div>
+                          ))}
+                        </div>
+                      )}
+                      {settings.translateOnButton && (
+                        <button 
+                          className="btn-outline mt-3 text-sm"
+                          onClick={() => setShowTranslation(false)}
+                        >
+                          Скрыть перевод
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <label className="text-sm text-gray-500 dark:text-gray-400">Введите пиньинь с тоном (например ni3)</label>

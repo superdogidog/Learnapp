@@ -5,6 +5,7 @@ import Navbar from './components/Navbar.jsx';
 import HomePage from './pages/HomePage.jsx';
 import ListeningPage from './pages/ListeningPage.jsx';
 import CharactersPage from './pages/CharactersPage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
 import { useSettings } from './context/SettingsContext.jsx';
 import { useAudioPreload } from './hooks/useAudioPreload.js';
 
@@ -137,6 +138,21 @@ function App() {
                 transition={pageTransition}
               >
                 <CharactersPage />
+              </motion.div>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <motion.div
+                className="fade-container"
+                initial="initial"
+                animate="in"
+                exit="out"
+                variants={pageVariants}
+                transition={pageTransition}
+              >
+                <SettingsPage />
               </motion.div>
             }
           />

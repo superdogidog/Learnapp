@@ -10,6 +10,7 @@
     "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
+    "cc-cedict": "^1.1.0",
     "framer-motion": "^11.0.0",
     "pinyin-pro": "^3.18.5",
     "react": "^18.2.0",
