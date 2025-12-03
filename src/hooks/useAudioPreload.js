@@ -53,48 +53,11 @@ export function useAudioPreload() {
 
         navigator.serviceWorker.addEventListener('message', messageHandler);
 
-        // Check if audio is already preloaded
-        const preloadStatus = localStorage.getItem('audioPreloadComplete');
-        const preloadTimestamp = localStorage.getItem('audioPreloadTimestamp');
-        const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-
-        // If preloaded recently (within a week), don't preload again
-        if (preloadStatus === 'true' && preloadTimestamp && parseInt(preloadTimestamp) > oneWeekAgo) {
-          console.log('Audio already preloaded, skipping...');
-          setPreloadComplete(true);
-          setPreloadProgress(100);
-          return;
-        }
-
-        // Start preloading audio files
-        setIsPreloading(true);
-        setPreloadProgress(10);
-
-        // Get all audio URLs from the database
-        const audioUrls = pinyinAudioDB
-          .filter(item => item.audio)
-          .map(item => item.audio);
-
-        console.log('Starting audio preload:', audioUrls.length, 'files');
-        setPreloadProgress(20);
-
-        // Send message to service worker to preload audio
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({
-            type: 'PRELOAD_AUDIO',
-            urls: audioUrls
-          });
-        } else {
-          // If no controller yet, wait a bit and try again
-          setTimeout(() => {
-            if (navigator.serviceWorker.controller) {
-              navigator.serviceWorker.controller.postMessage({
-                type: 'PRELOAD_AUDIO',
-                urls: audioUrls
-              });
-            }
-          }, 1000);
-        }
+        // Audio preloading is disabled - using lazy loading instead
+        // Service worker will cache audio files on-demand as they're used
+        console.log('Audio preloading disabled - using lazy loading for better performance');
+        setPreloadComplete(true);
+        setPreloadProgress(100);
 
       } catch (err) {
         console.error('Service Worker registration failed:', err);

@@ -1,8 +1,9 @@
 import { pinyin } from 'pinyin-pro';
-import { pinyinAudioDB } from '../data/pinyinAudioDB';
+import { pinyinAudioDB, loadAudio } from '../data/pinyinAudioDB';
 
-const audioMap = pinyinAudioDB.reduce((acc, entry) => {
-  acc.set(`${entry.syllable}${entry.tone}`, entry.audio);
+// Map of pinyin code to audio entry (for lazy loading)
+const audioEntryMap = pinyinAudioDB.reduce((acc, entry) => {
+  acc.set(`${entry.syllable}${entry.tone}`, entry);
   return acc;
 }, new Map());
 
@@ -35,13 +36,15 @@ const splitSyllable = (code) => {
   const rawTone = toneMatch ? Number(toneMatch[2]) : 5;
   const tone = rawTone === 0 ? 5 : rawTone;
   const normalized = normalizePlain(plain);
+  const audioEntry = audioEntryMap.get(`${plain}${tone}`);
   return {
     code: `${plain}${tone}`,
     plain,
     normalized,
     tone,
     display: applyToneMark(normalized, tone),
-    audio: audioMap.get(`${plain}${tone}`),
+    audioEntry,
+    audio: null, // Will be loaded lazily when needed
   };
 };
 
@@ -68,4 +71,17 @@ export const getPinyinForChars = (items) => {
   return result;
 };
 
-export const getAudioByPinyin = (pinyinCode) => audioMap.get(pinyinCode);
+export const getAudioByPinyin = async (pinyinCode) => {
+  const entry = audioEntryMap.get(pinyinCode);
+  if (!entry) return null;
+  return await loadAudio(entry);
+};
+
+// Helper to load audio for a syllable object
+export const loadSyllableAudio = async (syllable) => {
+  if (!syllable || syllable.audio) return syllable.audio;
+  if (syllable.audioEntry) {
+    syllable.audio = await loadAudio(syllable.audioEntry);
+  }
+  return syllable.audio;
+};

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { listeningSets } from '../data/listeningSets';
-import { getPinyinForChars, applyToneMark } from '../utils/pinyinHelpers';
+import { getPinyinForChars, applyToneMark, loadSyllableAudio } from '../utils/pinyinHelpers';
 import { pinyinAudioDB } from '../data/pinyinAudioDB';
 import { useSettings } from '../context/SettingsContext.jsx';
 import { useProgress } from '../context/ProgressContext.jsx';
@@ -21,9 +21,12 @@ const playSequence = async (syllables, fallbackSpeak) => {
   for (const unit of syllables) {
     if (!unit) continue;
     // eslint-disable-next-line no-await-in-loop
-    await new Promise((resolve) => {
-      if (unit.audio) {
-        const audio = new Audio(unit.audio);
+    await new Promise(async (resolve) => {
+      // Load audio lazily if not already loaded
+      const audioUrl = await loadSyllableAudio(unit);
+      
+      if (audioUrl) {
+        const audio = new Audio(audioUrl);
         audio.play();
         audio.onended = resolve;
         audio.onerror = resolve;
@@ -255,10 +258,30 @@ export default function ListeningPage() {
 
   useEffect(() => {
     if (!phoneticStarted || !currentPhonetic) return;
-    const audio = new Audio(currentPhonetic.audio);
-    phoneticAudioRef.current = audio;
-    audio.play().catch(() => speakSyllable({ display: currentPhonetic.syllable }));
-    return () => audio.pause();
+    
+    let audio;
+    const playAudio = async () => {
+      try {
+        // Load audio lazily
+        const audioUrl = await loadSyllableAudio(currentPhonetic);
+        if (audioUrl) {
+          audio = new Audio(audioUrl);
+          phoneticAudioRef.current = audio;
+          await audio.play();
+        } else {
+          await speakSyllable({ display: currentPhonetic.syllable });
+        }
+      } catch (err) {
+        console.error('Error playing audio:', err);
+        await speakSyllable({ display: currentPhonetic.syllable });
+      }
+    };
+    
+    playAudio();
+    
+    return () => {
+      if (audio) audio.pause();
+    };
   }, [phoneticStarted, currentPhonetic, speakSyllable]);
 
   const startPhonetic = () => {
@@ -270,10 +293,25 @@ export default function ListeningPage() {
     setPhoneticTone(null);
   };
 
-  const replayPhonetic = () => {
+  const replayPhonetic = async () => {
     if (phoneticAudioRef.current) {
       phoneticAudioRef.current.currentTime = 0;
       phoneticAudioRef.current.play().catch(() => speakSyllable({ display: currentPhonetic?.syllable }));
+    } else if (currentPhonetic) {
+      // If audio ref is not available, load and play again
+      try {
+        const audioUrl = await loadSyllableAudio(currentPhonetic);
+        if (audioUrl) {
+          const audio = new Audio(audioUrl);
+          phoneticAudioRef.current = audio;
+          await audio.play();
+        } else {
+          await speakSyllable({ display: currentPhonetic.syllable });
+        }
+      } catch (err) {
+        console.error('Error replaying audio:', err);
+        await speakSyllable({ display: currentPhonetic.syllable });
+      }
     }
   };
 
