@@ -76,8 +76,10 @@ git checkout main
 После успешного деплоя сайт будет доступен по адресу:
 
 ```
-https://superdogidog.github.io/Learnapp/
+https://<username>.github.io/Learnapp/
 ```
+
+Замените `<username>` на имя вашего пользователя GitHub.
 
 Обычно деплой занимает 1-3 минуты.
 

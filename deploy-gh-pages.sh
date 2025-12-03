@@ -12,7 +12,9 @@ echo "Checking out gh-pages branch..."
 git checkout gh-pages || git checkout -b gh-pages
 
 echo "Removing old files..."
-git rm -rf assets index.html .idea 2>/dev/null || true
+# Remove all tracked files except .git and .gitignore
+git ls-files | xargs -r git rm -rf 2>/dev/null || true
+# Clean untracked files
 rm -rf node_modules dist 2>/dev/null || true
 
 echo "Copying new build..."
