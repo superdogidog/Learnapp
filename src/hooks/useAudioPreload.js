@@ -23,9 +23,12 @@ export function useAudioPreload() {
 
     const registerServiceWorker = async () => {
       try {
+        // Get the base path from the current location
+        const basePath = import.meta.env.BASE_URL || '/';
+        
         // Register the service worker
-        const registration = await navigator.serviceWorker.register('/Learnapp/service-worker.js', {
-          scope: '/Learnapp/'
+        const registration = await navigator.serviceWorker.register(`${basePath}service-worker.js`, {
+          scope: basePath
         });
         
         console.log('Service Worker registered:', registration);
@@ -70,14 +73,7 @@ export function useAudioPreload() {
         // Get all audio URLs from the database
         const audioUrls = pinyinAudioDB
           .filter(item => item.audio)
-          .map(item => {
-            // Convert relative URL to absolute if needed
-            const url = item.audio;
-            if (url.startsWith('/')) {
-              return url;
-            }
-            return url;
-          });
+          .map(item => item.audio);
 
         console.log('Starting audio preload:', audioUrls.length, 'files');
         setPreloadProgress(20);

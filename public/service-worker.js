@@ -2,10 +2,10 @@
 const CACHE_NAME = 'learn-chinese-audio-v1';
 const AUDIO_CACHE_NAME = 'learn-chinese-audio-files-v1';
 
-// Files to cache immediately on install
+// Files to cache immediately on install (will be relative to service worker scope)
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
+  './',
+  './index.html',
 ];
 
 // Install event - cache static assets
