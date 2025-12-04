@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { listeningSets } from '../data/listeningSets';
-import { getPinyinForChars, applyToneMark } from '../utils/pinyinHelpers';
+import { getPinyinForChars, applyToneMark, loadSyllableAudio } from '../utils/pinyinHelpers';
 import { pinyinAudioDB } from '../data/pinyinAudioDB';
 import { useSettings } from '../context/SettingsContext.jsx';
 import { useProgress } from '../context/ProgressContext.jsx';
@@ -20,10 +20,15 @@ const shuffle = (array) => array.slice().sort(() => Math.random() - 0.5);
 const playSequence = async (syllables, fallbackSpeak) => {
   for (const unit of syllables) {
     if (!unit) continue;
+    
+    // Load audio lazily if not already loaded
+    // eslint-disable-next-line no-await-in-loop
+    const audioUrl = await loadSyllableAudio(unit);
+    
     // eslint-disable-next-line no-await-in-loop
     await new Promise((resolve) => {
-      if (unit.audio) {
-        const audio = new Audio(unit.audio);
+      if (audioUrl) {
+        const audio = new Audio(audioUrl);
         audio.play();
         audio.onended = resolve;
         audio.onerror = resolve;
@@ -255,10 +260,31 @@ export default function ListeningPage() {
 
   useEffect(() => {
     if (!phoneticStarted || !currentPhonetic) return;
-    const audio = new Audio(currentPhonetic.audio);
-    phoneticAudioRef.current = audio;
-    audio.play().catch(() => speakSyllable({ display: currentPhonetic.syllable }));
-    return () => audio.pause();
+    
+    const playAudio = async () => {
+      try {
+        // Load audio lazily
+        const audioUrl = await loadSyllableAudio(currentPhonetic);
+        if (audioUrl) {
+          const audio = new Audio(audioUrl);
+          phoneticAudioRef.current = audio;
+          await audio.play();
+        } else {
+          await speakSyllable({ display: currentPhonetic.syllable });
+        }
+      } catch (err) {
+        console.error('Error playing audio:', err);
+        await speakSyllable({ display: currentPhonetic.syllable });
+      }
+    };
+    
+    playAudio();
+    
+    return () => {
+      if (phoneticAudioRef.current) {
+        phoneticAudioRef.current.pause();
+      }
+    };
   }, [phoneticStarted, currentPhonetic, speakSyllable]);
 
   const startPhonetic = () => {
@@ -274,6 +300,24 @@ export default function ListeningPage() {
     if (phoneticAudioRef.current) {
       phoneticAudioRef.current.currentTime = 0;
       phoneticAudioRef.current.play().catch(() => speakSyllable({ display: currentPhonetic?.syllable }));
+    } else if (currentPhonetic) {
+      // If audio ref is not available, load and play again
+      const loadAndPlay = async () => {
+        try {
+          const audioUrl = await loadSyllableAudio(currentPhonetic);
+          if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            phoneticAudioRef.current = audio;
+            await audio.play();
+          } else {
+            await speakSyllable({ display: currentPhonetic.syllable });
+          }
+        } catch (err) {
+          console.error('Error replaying audio:', err);
+          await speakSyllable({ display: currentPhonetic.syllable });
+        }
+      };
+      loadAndPlay();
     }
   };
 
@@ -465,13 +509,13 @@ export default function ListeningPage() {
               )}
             </div>
             <div>
-              <label className="text-sm text-gray-500 dark:text-gray-400">Введите пиньинь с тоном (например ni3)</label>
+              <label className="text-sm text-gray-500 dark:text-gray-400">Введите пиньинь (например ni или nǐ)</label>
               <input
                 type="text"
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
-                placeholder="например ni3"
+                placeholder="например ni или nǐ"
                 className="mt-2 w-full rounded-2xl border border-rose-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-950 text-base md:text-lg"
               />
             </div>
