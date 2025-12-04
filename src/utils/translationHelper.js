@@ -1,4 +1,25 @@
-import cedict from 'cc-cedict';
+// Lazy load cedict to improve initial page load performance
+let cedict = null;
+let cedictLoadPromise = null;
+
+const loadCedict = async () => {
+  if (cedict) return cedict;
+  if (cedictLoadPromise) return cedictLoadPromise;
+  
+  cedictLoadPromise = import('cc-cedict')
+    .then(module => {
+      cedict = module.default;
+      return cedict;
+    })
+    .catch(error => {
+      console.error('Failed to load cedict:', error);
+      // Reset promise so we can retry
+      cedictLoadPromise = null;
+      throw error;
+    });
+  
+  return cedictLoadPromise;
+};
 
 // Cache for translations to avoid repeated API calls
 const translationCache = new Map();
@@ -68,11 +89,13 @@ async function translateDefinitions(definitions) {
  * @param {Function} onRussianReady - Optional callback when Russian translations are ready
  * @returns {Object|null} Translation data with English definitions or null if not found
  */
-export function getTranslation(text, onRussianReady = null) {
+export async function getTranslation(text, onRussianReady = null) {
   if (!text || text.trim() === '') return null;
   
   try {
-    const results = cedict.getBySimplified(text, null, { asObject: false, allowVariants: true });
+    // Load cedict lazily
+    const dict = await loadCedict();
+    const results = dict.getBySimplified(text, null, { asObject: false, allowVariants: true });
     
     if (!results || results.length === 0) return null;
     
@@ -119,11 +142,13 @@ export function getTranslation(text, onRussianReady = null) {
  * @param {Function} onRussianReady - Optional callback when Russian translations are ready
  * @returns {Object|null} Extended translation data with English definitions
  */
-export function getExtendedTranslation(text, onRussianReady = null) {
+export async function getExtendedTranslation(text, onRussianReady = null) {
   if (!text || text.trim() === '') return null;
   
   try {
-    const results = cedict.getBySimplified(text, null, { asObject: false, allowVariants: true });
+    // Load cedict lazily
+    const dict = await loadCedict();
+    const results = dict.getBySimplified(text, null, { asObject: false, allowVariants: true });
     
     if (!results || results.length === 0) return null;
     

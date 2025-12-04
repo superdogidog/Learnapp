@@ -103,18 +103,27 @@ export default function ListeningPage() {
     setShowEnglish(false);
     setIsLoadingRussian(true);
     
-    // Get English translation immediately
+    // Get English translation (now async)
     const handleRussianReady = (russianResult) => {
       setRussianTranslation(russianResult);
       setIsLoadingRussian(false);
     };
     
-    const result = settings.extendedTranslation 
-      ? getExtendedTranslation(current.text, handleRussianReady)
-      : getTranslation(current.text, handleRussianReady);
+    const loadTranslation = async () => {
+      try {
+        const result = settings.extendedTranslation 
+          ? await getExtendedTranslation(current.text, handleRussianReady)
+          : await getTranslation(current.text, handleRussianReady);
+        
+        setTranslation(result);
+        setRussianTranslation(null);
+      } catch (error) {
+        console.error('Failed to load translation:', error);
+        setIsLoadingRussian(false);
+      }
+    };
     
-    setTranslation(result);
-    setRussianTranslation(null);
+    loadTranslation();
   }, [current?.text, settings.enableTranslation, settings.extendedTranslation]);
 
   const applyPreset = (chars) => {

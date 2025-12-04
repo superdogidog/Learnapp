@@ -31,6 +31,25 @@
     <noscript>Для работы сайта необходимо включить JavaScript.</noscript>
     <div id="root">Загрузка приложения…</div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Loading timeout detection for mobile browsers
+      setTimeout(function() {
+        var root = document.getElementById('root');
+        // Check if app hasn't loaded by verifying root still contains only a single text node
+        if (root && root.children.length === 0 && root.textContent.trim().length > 0) {
+          root.innerHTML = '<div style="padding: 20px; text-align: center; font-family: system-ui, -apple-system, sans-serif;">' +
+            '<h1 style="color: #dc2626; margin-bottom: 16px;">Ошибка загрузки</h1>' +
+            '<p style="color: #374151; margin-bottom: 16px;">Приложение не смогло загрузиться. Попробуйте:</p>' +
+            '<ul style="list-style: none; padding: 0; color: #6b7280;">' +
+            '<li style="margin: 8px 0;">• Обновить страницу</li>' +
+            '<li style="margin: 8px 0;">• Очистить кэш браузера</li>' +
+            '<li style="margin: 8px 0;">• Использовать другой браузер</li>' +
+            '</ul>' +
+            '<button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 24px; background: #ef4444; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer;">Обновить страницу</button>' +
+            '</div>';
+        }
+      }, 15000); // 15 second timeout
+    </script>
   </body>
 </html>
 
