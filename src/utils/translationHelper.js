@@ -6,10 +6,17 @@ const loadCedict = async () => {
   if (cedict) return cedict;
   if (cedictLoadPromise) return cedictLoadPromise;
   
-  cedictLoadPromise = import('cc-cedict').then(module => {
-    cedict = module.default;
-    return cedict;
-  });
+  cedictLoadPromise = import('cc-cedict')
+    .then(module => {
+      cedict = module.default;
+      return cedict;
+    })
+    .catch(error => {
+      console.error('Failed to load cedict:', error);
+      // Reset promise so we can retry
+      cedictLoadPromise = null;
+      throw error;
+    });
   
   return cedictLoadPromise;
 };

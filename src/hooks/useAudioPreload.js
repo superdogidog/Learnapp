@@ -35,20 +35,24 @@ export function useAudioPreload() {
         });
         
         // Add timeout for Safari which might hang on registration
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Service Worker registration timeout')), 5000)
-        );
+        let registrationTimeoutId;
+        const timeoutPromise = new Promise((_, reject) => {
+          registrationTimeoutId = setTimeout(() => reject(new Error('Service Worker registration timeout')), 5000);
+        });
         
         const registration = await Promise.race([registrationPromise, timeoutPromise]);
+        clearTimeout(registrationTimeoutId);
         console.log('Service Worker registered:', registration);
 
         // Wait for the service worker to be ready with timeout
         const readyPromise = navigator.serviceWorker.ready;
-        const readyTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Service Worker ready timeout')), 5000)
-        );
+        let readyTimeoutId;
+        const readyTimeoutPromise = new Promise((_, reject) => {
+          readyTimeoutId = setTimeout(() => reject(new Error('Service Worker ready timeout')), 5000);
+        });
         
         await Promise.race([readyPromise, readyTimeoutPromise]);
+        clearTimeout(readyTimeoutId);
         console.log('Service Worker ready');
 
         // Set up message listener for preload completion
