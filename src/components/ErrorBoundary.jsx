@@ -11,6 +11,17 @@ export default class ErrorBoundary extends React.Component {
   componentDidCatch(error, info) {
     // Можно логировать на сервер позже
     console.error('Ошибка рендера:', error, info);
+    // Store error info for debugging on mobile
+    try {
+      sessionStorage.setItem('lastError', JSON.stringify({
+        error: error.toString(),
+        stack: error.stack,
+        info: info.componentStack,
+        timestamp: new Date().toISOString()
+      }));
+    } catch (e) {
+      // Ignore storage errors
+    }
   }
   render() {
     if (this.state.hasError) {

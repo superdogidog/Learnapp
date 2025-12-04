@@ -16,6 +16,9 @@ export function useAudioPreload() {
     if (!('serviceWorker' in navigator)) {
       console.warn('Service Workers not supported in this browser');
       setError('Service Workers not supported');
+      // Continue without service worker
+      setPreloadComplete(true);
+      setPreloadProgress(100);
       return;
     }
 
@@ -26,15 +29,26 @@ export function useAudioPreload() {
         // Get the base path from the current location
         const basePath = import.meta.env.BASE_URL || '/';
         
-        // Register the service worker
-        const registration = await navigator.serviceWorker.register(`${basePath}service-worker.js`, {
+        // Register the service worker with timeout for Safari
+        const registrationPromise = navigator.serviceWorker.register(`${basePath}service-worker.js`, {
           scope: basePath
         });
         
+        // Add timeout for Safari which might hang on registration
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Service Worker registration timeout')), 5000)
+        );
+        
+        const registration = await Promise.race([registrationPromise, timeoutPromise]);
         console.log('Service Worker registered:', registration);
 
-        // Wait for the service worker to be ready
-        await navigator.serviceWorker.ready;
+        // Wait for the service worker to be ready with timeout
+        const readyPromise = navigator.serviceWorker.ready;
+        const readyTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Service Worker ready timeout')), 5000)
+        );
+        
+        await Promise.race([readyPromise, readyTimeoutPromise]);
         console.log('Service Worker ready');
 
         // Set up message listener for preload completion
@@ -46,8 +60,12 @@ export function useAudioPreload() {
             setPreloadProgress(100);
             
             // Store completion status in localStorage
-            localStorage.setItem('audioPreloadComplete', 'true');
-            localStorage.setItem('audioPreloadTimestamp', Date.now().toString());
+            try {
+              localStorage.setItem('audioPreloadComplete', 'true');
+              localStorage.setItem('audioPreloadTimestamp', Date.now().toString());
+            } catch (e) {
+              console.warn('localStorage not available:', e);
+            }
           }
         };
 
@@ -63,6 +81,9 @@ export function useAudioPreload() {
         console.error('Service Worker registration failed:', err);
         setError(err.message);
         setIsPreloading(false);
+        // Continue without service worker
+        setPreloadComplete(true);
+        setPreloadProgress(100);
       }
     };
 
